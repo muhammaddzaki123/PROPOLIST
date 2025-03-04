@@ -1,26 +1,26 @@
 import {Account, Avatars, Client, Functions, OAuthProvider} from "react-native-appwrite"
 import * as Linking from 'expo-linking'
+import { openAuthSessionAsync } from 'expo-web-browser';
 
 export const config ={
     platform:'com.jsm.propolist',
-    endpoin: process.env.XPO_PUBLIC_APRITE_ENDPOINT,
+    endpoint: process.env.EXPO_PUBLIC_APRITE_ENDPOINT,
     projectId: process.env.EXPO_PUBLIC_APRITE_PROJECT_ID,
 }
 
 export const client = new Client()
 
 client
-    .setEndpoint(config.endpoin!)
+    .setEndpoint(config.endpoint!)
     .setProject(config.projectId!)
     .setPlatform(config.platform!)
 
 export const avatar = new Avatars(client)
 export const account =new Account(client)
-import { openAuthSessionAsync } from 'expo-web-browser';
 
 export async function login() {
     try {
-        const redirectUri = Linking.createURL('/')
+        const redirectUri = Linking.createURL('/');
 
         const response = await account.createOAuth2Token(OAuthProvider.Google, redirectUri)
 
@@ -75,6 +75,8 @@ export async function getUser() {
 
             }
         }
+
+        return null;
     } catch (error) {
         console.error(error)
         return null
