@@ -1,10 +1,10 @@
-import { View, Text, ScrollView, Image, TouchableOpacity, Alert } from 'react-native'
-import React from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { login } from '@/lib/appwrite'
+import React from 'react'
+import { Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
-import images from '@/constants/images'
 import icons from '@/constants/icons'
+import images from '@/constants/images'
 
 const SignIn = () => {
   const handleLogin =async () => {

@@ -1,5 +1,5 @@
-import images from "./images";
 import icons from "./icons";
+import images from "./images";
 export const cards = [
   {
     title: "Card 1",
@@ -63,40 +63,40 @@ export const categories = [
   { title: "Others", category: "Others" },
 ];
 
-// export const settings = [
-//   {
-//     title: "My Bookings",
-//     icon: icons.calendar,
-//   },
-//   {
-//     title: "Payments",
-//     icon: icons.wallet,
-//   },
-//   {
-//     title: "Profile",
-//     icon: icons.person,
-//   },
-//   {
-//     title: "Notifications",
-//     icon: icons.bell,
-//   },
-//   {
-//     title: "Security",
-//     icon: icons.shield,
-//   },
-//   {
-//     title: "Language",
-//     icon: icons.language,
-//   },
-//   {
-//     title: "Help Center",
-//     icon: icons.info,
-//   },
-//   {
-//     title: "Invite Friends",
-//     icon: icons.people,
-//   },
-// ];
+export const settings = [
+  {
+    title: "My Bookings",
+    icon: icons.home,
+  },
+  {
+    title: "Payments",
+    icon: icons.home,
+  },
+  {
+    title: "Profile",
+    icon: icons.person,
+  },
+  {
+    title: "Notifications",
+    icon: icons.bell,
+  },
+  {
+    title: "Security",
+    icon: icons.home,
+  },
+  {
+    title: "Language",
+    icon: icons.home,
+  },
+  {
+    title: "Help Center",
+    icon: icons.home,
+  },
+  {
+    title: "Invite Friends",
+    icon: icons.home,
+  },
+];
 
 // export const facilities = [
 //   {
