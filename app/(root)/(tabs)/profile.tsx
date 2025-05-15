@@ -1,3 +1,6 @@
+import { logout } from "@/lib/appwrite";
+import { useGlobalContext } from "@/lib/global-provider";
+import { router } from "expo-router";
 import {
   Alert,
   Image,
@@ -8,9 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-import { logout } from "@/lib/appwrite";
-import { useGlobalContext } from "@/lib/global-provider";
 
 import { settings } from "@/constants/data";
 import icons from "@/constants/icons";
@@ -108,6 +108,14 @@ const Profile = () => {
             showArrow={false}
             onPress={handleLogout}
           />
+
+                    {/* Tombol Sign-In */}
+            <SettingsItem
+    icon={icons.logout} // pastikan icon login ada di icons.js
+    title="Sign In"
+    showArrow={false}
+    onPress={() => router.push("/sign-in")}
+  />
         </View>
 
       </ScrollView>
