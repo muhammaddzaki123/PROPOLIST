@@ -1,8 +1,11 @@
-import GlobalProvider from "@/lib/global-provider";
 import { useFonts } from "expo-font";
-import { SplashScreen, Stack } from "expo-router";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import "../global.css";
+
+import GlobalProvider from "@/lib/global-provider";
+import "./global.css";
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     "Rubik-Bold": require("../assets/fonts/Rubik-Bold.ttf"),
