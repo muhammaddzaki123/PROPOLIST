@@ -1,31 +1,33 @@
-import { Redirect } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
+  Alert,
   Image,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import icons from "../constants/icons";
-import images from "../constants/images";
-import { useGlobalContext } from "../lib/global-provider";
+
+import { login } from "@/lib/appwrite";
+import { Redirect } from "expo-router";
+import { useGlobalContext } from "@/lib/global-provider";
+import icons from "@/constants/icons";
+import images from "@/constants/images";
 
 const Auth = () => {
-  const { handleLogin, loading, isLogged } = useGlobalContext();
-  const [error, setError] = useState<string | null>(null);
-
-  const onPressLogin = async () => {
-    try {
-      setError(null);
-      await handleLogin();
-    } catch (err: any) {
-      setError(err.message || "An error occurred during login");
-    }
-  };
+  const { refetch, loading, isLogged } = useGlobalContext();
 
   if (!loading && isLogged) return <Redirect href="/" />;
+
+  const handleLogin = async () => {
+    const result = await login();
+    if (result) {
+      refetch();
+    } else {
+      Alert.alert("Error", "Failed to login");
+    }
+  };
 
   return (
     <SafeAreaView className="bg-white h-full">
@@ -54,20 +56,9 @@ const Auth = () => {
             Login to Real Scout with Google
           </Text>
 
-          {error && (
-            <View className="bg-red-100 border border-red-400 rounded-lg p-4 mt-4 mb-2">
-              <Text className="text-red-700 text-sm font-rubik text-center">
-                {error}
-              </Text>
-            </View>
-          )}
-
           <TouchableOpacity
-            onPress={onPressLogin}
-            disabled={loading}
-            className={`bg-white shadow-md shadow-zinc-300 rounded-full w-full py-4 mt-5 ${
-              loading ? "opacity-50" : ""
-            }`}
+            onPress={handleLogin}
+            className="bg-white shadow-md shadow-zinc-300 rounded-full w-full py-4 mt-5"
           >
             <View className="flex flex-row items-center justify-center">
               <Image
@@ -76,7 +67,7 @@ const Auth = () => {
                 resizeMode="contain"
               />
               <Text className="text-lg font-rubik-medium text-black-300 ml-2">
-                {loading ? "Loading..." : "Continue with Google"}
+                Continue with Google
               </Text>
             </View>
           </TouchableOpacity>

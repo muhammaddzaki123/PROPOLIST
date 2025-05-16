@@ -1,15 +1,14 @@
-import {
-  Client,
-  Account,
-  ID,
-  Databases,
-  OAuthProvider,
-  Avatars,
-  Query,
-  Storage,
-} from "react-native-appwrite";
 import * as Linking from "expo-linking";
 import { openAuthSessionAsync } from "expo-web-browser";
+import {
+  Account,
+  Avatars,
+  Client,
+  Databases,
+  OAuthProvider,
+  Query,
+  Storage
+} from "react-native-appwrite";
 
 export const config = {
   platform: "com.dzaki.propolist",
