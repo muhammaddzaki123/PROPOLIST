@@ -1,5 +1,5 @@
 import { Redirect } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   Image,
   ScrollView,
@@ -14,6 +14,16 @@ import { useGlobalContext } from "../lib/global-provider";
 
 const Auth = () => {
   const { handleLogin, loading, isLogged } = useGlobalContext();
+  const [error, setError] = useState<string | null>(null);
+
+  const onPressLogin = async () => {
+    try {
+      setError(null);
+      await handleLogin();
+    } catch (err: any) {
+      setError(err.message || "An error occurred during login");
+    }
+  };
 
   if (!loading && isLogged) return <Redirect href="/" />;
 
@@ -44,8 +54,16 @@ const Auth = () => {
             Login to Real Scout with Google
           </Text>
 
+          {error && (
+            <View className="bg-red-100 border border-red-400 rounded-lg p-4 mt-4 mb-2">
+              <Text className="text-red-700 text-sm font-rubik text-center">
+                {error}
+              </Text>
+            </View>
+          )}
+
           <TouchableOpacity
-            onPress={handleLogin}
+            onPress={onPressLogin}
             disabled={loading}
             className={`bg-white shadow-md shadow-zinc-300 rounded-full w-full py-4 mt-5 ${
               loading ? "opacity-50" : ""
