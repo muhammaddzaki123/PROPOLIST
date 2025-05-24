@@ -1,8 +1,8 @@
 import { Redirect, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-import Loader from "../../components/Loader";
-import { useGlobalContext } from "../../context/GlobalProvider";
+import Loader from "@/components/Loader";
+import { useGlobalContext } from "@/lib/global-provider";
 
 const AuthLayout = () => {
   const { loading, isLogged } = useGlobalContext();

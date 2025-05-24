@@ -23,13 +23,13 @@ const Welcome = () => {
       >
         <View className="w-full flex justify-center items-center h-full px-4">
           <Image
-            source={images.logo}
+            source={images.logoawal}
             className="w-[130px] h-[84px]"
             resizeMode="contain"
           />
 
           <Image
-            source={images.cards}
+            source={images.logoawal}
             className="max-w-[380px] w-full h-[298px]"
             resizeMode="contain"
           />
@@ -42,7 +42,7 @@ const Welcome = () => {
             </Text>
 
             <Image
-              source={images.path}
+              source={images.logoawal}
               className="w-[136px] h-[15px] absolute -bottom-2 -right-8"
               resizeMode="contain"
             />
