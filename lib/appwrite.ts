@@ -1,166 +1,256 @@
-import * as Linking from "expo-linking";
-import { openAuthSessionAsync } from "expo-web-browser";
 import {
   Account,
   Avatars,
   Client,
   Databases,
-  OAuthProvider,
+  ID,
   Query,
-  Storage
+  Storage,
 } from "react-native-appwrite";
 
-export const config = {
-  platform: "com.dzaki.propolist",
-  endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
-  projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID,
-  databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID,
-  galleriesCollectionId:
-    process.env.EXPO_PUBLIC_APPWRITE_GALLERIES_COLLECTION_ID,
-  reviewsCollectionId: process.env.EXPO_PUBLIC_APPWRITE_REVIEWS_COLLECTION_ID,
-  agentsCollectionId: process.env.EXPO_PUBLIC_APPWRITE_AGENTS_COLLECTION_ID,
-  propertiesCollectionId:
-    process.env.EXPO_PUBLIC_APPWRITE_PROPERTIES_COLLECTION_ID,
-  bucketId: process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID,
+export const appwriteConfig = {
+  endpoint: "https://cloud.appwrite.io/v1",
+  platform: "com.jsm.sora",
+  projectId: "660d0e00da0472f3ad52",
+  storageId: "660d0e59e293896f1eaf",
+  databaseId: "660d14b2b809e838959a",
+  userCollectionId: "660d14c0e8ae0ea842b8",
+  videoCollectionId: "660d157fcb8675efe308",
 };
 
-export const client = new Client();
+const client = new Client();
+
 client
-  .setEndpoint(config.endpoint!)
-  .setProject(config.projectId!)
-  .setPlatform(config.platform!);
+  .setEndpoint(appwriteConfig.endpoint)
+  .setProject(appwriteConfig.projectId)
+  .setPlatform(appwriteConfig.platform);
 
-export const avatar = new Avatars(client);
-export const account = new Account(client);
-export const databases = new Databases(client);
-export const storage = new Storage(client);
+const account = new Account(client);
+const storage = new Storage(client);
+const avatars = new Avatars(client);
+const databases = new Databases(client);
 
-export async function login() {
+// Register user
+export async function createUser(email, password, username) {
   try {
-    const redirectUri = Linking.createURL("/");
-
-    const response = await account.createOAuth2Token(
-      OAuthProvider.Google,
-      redirectUri
+    const newAccount = await account.create(
+      ID.unique(),
+      email,
+      password,
+      username
     );
-    if (!response) throw new Error("Create OAuth2 token failed");
 
-    const browserResult = await openAuthSessionAsync(
-      response.toString(),
-      redirectUri
+    if (!newAccount) throw Error;
+
+    const avatarUrl = avatars.getInitials(username);
+
+    await signIn(email, password);
+
+    const newUser = await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.userCollectionId,
+      ID.unique(),
+      {
+        accountId: newAccount.$id,
+        email: email,
+        username: username,
+        avatar: avatarUrl,
+      }
     );
-    if (browserResult.type !== "success")
-      throw new Error("Create OAuth2 token failed");
 
-    const url = new URL(browserResult.url);
-    const secret = url.searchParams.get("secret")?.toString();
-    const userId = url.searchParams.get("userId")?.toString();
-    if (!secret || !userId) throw new Error("Create OAuth2 token failed");
-
-    const session = await account.createSession(userId, secret);
-    if (!session) throw new Error("Failed to create session");
-
-    return true;
+    return newUser;
   } catch (error) {
-    console.error(error);
-    return false;
+    throw new Error(error);
   }
 }
 
-export async function logout() {
+// Sign In
+export async function signIn(email, password) {
   try {
-    const result = await account.deleteSession("current");
-    return result;
+    const session = await account.createEmailSession(email, password);
+
+    return session;
   } catch (error) {
-    console.error(error);
-    return false;
+    throw new Error(error);
   }
 }
 
+// Get Account
+export async function getAccount() {
+  try {
+    const currentAccount = await account.get();
+
+    return currentAccount;
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+
+// Get Current User
 export async function getCurrentUser() {
   try {
-    const result = await account.get();
-    if (result.$id) {
-      const userAvatar = avatar.getInitials(result.name);
+    const currentAccount = await getAccount();
+    if (!currentAccount) throw Error;
 
-      return {
-        ...result,
-        avatar: userAvatar.toString(),
-      };
-    }
+    const currentUser = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.userCollectionId,
+      [Query.equal("accountId", currentAccount.$id)]
+    );
 
-    return null;
+    if (!currentUser) throw Error;
+
+    return currentUser.documents[0];
   } catch (error) {
     console.log(error);
     return null;
   }
 }
 
-export async function getLatestProperties() {
+// Sign Out
+export async function signOut() {
   try {
-    const result = await databases.listDocuments(
-      config.databaseId!,
-      config.propertiesCollectionId!,
-      [Query.orderAsc("$createdAt"), Query.limit(5)]
-    );
+    const session = await account.deleteSession("current");
 
-    return result.documents;
+    return session;
   } catch (error) {
-    console.error(error);
-    return [];
+    throw new Error(error);
   }
 }
 
-export async function getProperties({
-  filter,
-  query,
-  limit,
-}: {
-  filter: string;
-  query: string;
-  limit?: number;
-}) {
+// Upload File
+export async function uploadFile(file, type) {
+  if (!file) return;
+
+  const { mimeType, ...rest } = file;
+  const asset = { type: mimeType, ...rest };
+
   try {
-    const buildQuery = [Query.orderDesc("$createdAt")];
+    const uploadedFile = await storage.createFile(
+      appwriteConfig.storageId,
+      ID.unique(),
+      asset
+    );
 
-    if (filter && filter !== "All")
-      buildQuery.push(Query.equal("type", filter));
+    const fileUrl = await getFilePreview(uploadedFile.$id, type);
+    return fileUrl;
+  } catch (error) {
+    throw new Error(error);
+  }
+}
 
-    if (query)
-      buildQuery.push(
-        Query.or([
-          Query.search("name", query),
-          Query.search("address", query),
-          Query.search("type", query),
-        ])
+// Get File Preview
+export async function getFilePreview(fileId, type) {
+  let fileUrl;
+
+  try {
+    if (type === "video") {
+      fileUrl = storage.getFileView(appwriteConfig.storageId, fileId);
+    } else if (type === "image") {
+      fileUrl = storage.getFilePreview(
+        appwriteConfig.storageId,
+        fileId,
+        2000,
+        2000,
+        "top",
+        100
       );
+    } else {
+      throw new Error("Invalid file type");
+    }
 
-    if (limit) buildQuery.push(Query.limit(limit));
+    if (!fileUrl) throw Error;
 
-    const result = await databases.listDocuments(
-      config.databaseId!,
-      config.propertiesCollectionId!,
-      buildQuery
-    );
-
-    return result.documents;
+    return fileUrl;
   } catch (error) {
-    console.error(error);
-    return [];
+    throw new Error(error);
   }
 }
 
-// write function to get property by id
-export async function getPropertyById({ id }: { id: string }) {
+// Create Video Post
+export async function createVideoPost(form) {
   try {
-    const result = await databases.getDocument(
-      config.databaseId!,
-      config.propertiesCollectionId!,
-      id
+    const [thumbnailUrl, videoUrl] = await Promise.all([
+      uploadFile(form.thumbnail, "image"),
+      uploadFile(form.video, "video"),
+    ]);
+
+    const newPost = await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.videoCollectionId,
+      ID.unique(),
+      {
+        title: form.title,
+        thumbnail: thumbnailUrl,
+        video: videoUrl,
+        prompt: form.prompt,
+        creator: form.userId,
+      }
     );
-    return result;
+
+    return newPost;
   } catch (error) {
-    console.error(error);
-    return null;
+    throw new Error(error);
+  }
+}
+
+// Get all video Posts
+export async function getAllPosts() {
+  try {
+    const posts = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.videoCollectionId
+    );
+
+    return posts.documents;
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+
+// Get video posts created by user
+export async function getUserPosts(userId) {
+  try {
+    const posts = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.videoCollectionId,
+      [Query.equal("creator", userId)]
+    );
+
+    return posts.documents;
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+
+// Get video posts that matches search query
+export async function searchPosts(query) {
+  try {
+    const posts = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.videoCollectionId,
+      [Query.search("title", query)]
+    );
+
+    if (!posts) throw new Error("Something went wrong");
+
+    return posts.documents;
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+
+// Get latest created video posts
+export async function getLatestPosts() {
+  try {
+    const posts = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.videoCollectionId,
+      [Query.orderDesc("$createdAt"), Query.limit(7)]
+    );
+
+    return posts.documents;
+  } catch (error) {
+    throw new Error(error);
   }
 }

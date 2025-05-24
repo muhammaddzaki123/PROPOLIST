@@ -1,7 +1,8 @@
-import { useFonts } from "expo-font";
-import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
-import "../global.css";
+import { useFonts } from "expo-font";
+import "react-native-url-polyfill/auto";
+import { SplashScreen, Stack } from "expo-router";
+
 import GlobalProvider from "../lib/global-provider";
 
 export default function RootLayout() {
@@ -14,20 +15,33 @@ export default function RootLayout() {
     "Rubik-SemiBold": require("../assets/fonts/Rubik-SemiBold.ttf"),
   });
 
-  useEffect(() => {
+ useEffect(() => {
+    if (error) throw error;
+
     if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, error]);
 
   if (!fontsLoaded) {
     return null;
   }
 
+  if (!fontsLoaded && !error) {
+    return null;
+  }
+
   return (
     <GlobalProvider>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+      </Stack>
     </GlobalProvider>
   );
-}
+};
+
+export default RootLayout;
+
 

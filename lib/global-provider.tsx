@@ -1,59 +1,47 @@
-import React, { createContext, ReactNode, useContext } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { getCurrentUser } from "./appwrite";
-import { useAppwrite } from "./useAppwrite";
+import { getCurrentUser } from "../lib/appwrite";
 
-interface GlobalContextType {
-  isLogged: boolean;
-  user: User | null;
-  loading: boolean;
-  refetch: () => void;
-}
+const GlobalContext = createContext();
+export const useGlobalContext = () => useContext(GlobalContext);
 
-interface User {
-  $id: string;
-  name: string;
-  email: string;
-  avatar: string;
-}
+const GlobalProvider = ({ children }) => {
+  const [isLogged, setIsLogged] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
-
-interface GlobalProviderProps {
-  children: ReactNode;
-}
-
-export const GlobalProvider = ({ children }: GlobalProviderProps) => {
-  const {
-    data: user,
-    loading,
-    refetch,
-  } = useAppwrite({
-    fn: getCurrentUser,
-  });
-
-  const isLogged = !!user;
+  useEffect(() => {
+    getCurrentUser()
+      .then((res) => {
+        if (res) {
+          setIsLogged(true);
+          setUser(res);
+        } else {
+          setIsLogged(false);
+          setUser(null);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <GlobalContext.Provider
       value={{
         isLogged,
+        setIsLogged,
         user,
+        setUser,
         loading,
-        refetch,
       }}
     >
       {children}
     </GlobalContext.Provider>
   );
-};
-
-export const useGlobalContext = (): GlobalContextType => {
-  const context = useContext(GlobalContext);
-  if (!context)
-    throw new Error("useGlobalContext must be used within a GlobalProvider");
-
-  return context;
 };
 
 export default GlobalProvider;
